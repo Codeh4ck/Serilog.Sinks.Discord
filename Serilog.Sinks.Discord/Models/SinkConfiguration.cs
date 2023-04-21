@@ -25,7 +25,7 @@ namespace Serilog.Sinks.Discord.Models
         /// <summary>
         /// If set, will override the default service name (Serilog Discord Sink) which is used as the embed's title.
         /// </summary>
-        public string WebhookServiceName { get; set; } = "Serilog Discord Sink";
+        public string ServiceName { get; set; } = "Serilog Discord Sink";
 
         /// <summary>
         /// Set the avatar URL of the webhook author.
@@ -36,5 +36,15 @@ namespace Serilog.Sinks.Discord.Models
         /// The timestamp format as represented in the webhook Embed footer.
         /// </summary>
         public string TimestampFormat { get; set; } = "F";
+        
+        /// <summary>
+        /// A message template describing the format used to write to the sink. The default is <code>"{Message:lj}{NewLine}{NewLine}{Exception}"</code>.
+        /// </summary>
+        public string OutputTemplate { get; set; }
+
+        /// <summary>
+        /// When set to true, the Discord message containing the log will mention everyone on the server when an event of <seealso cref="LogEventLevel.Fatal"/> is fired./>
+        /// </summary>
+        public bool MentionEveryoneOnFatalLevel { get; set; } = true;
     }
 }

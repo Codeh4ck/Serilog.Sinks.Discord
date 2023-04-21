@@ -1,9 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
+        <TargetFrameworks>net6.0;net7.0;netstandard2.1</TargetFrameworks>
+        <Title>Serilog.Sinks.Discord</Title>
+        <Authors>Nikolas Andreou</Authors>
+        <Description>A Serilog sink that writes events to a Discord channel through webhooks.</Description>
+        <Copyright>Copyright ©2023 Nikolas Andreou. All rights reserved.</Copyright>
+        <PackageProjectUrl>https://github.com/Codeh4ck/Serilog.Sinks.Discord</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Codeh4ck/Serilog.Sinks.Discord</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageTags>serilog,discord,log,logging,logs,events</PackageTags>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Discord.Net" Version="3.10.0" />
+      <PackageReference Include="Serilog" Version="3.0.0-dev-01958" />
+    </ItemGroup>
 
 </Project>

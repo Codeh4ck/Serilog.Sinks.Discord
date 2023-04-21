@@ -2,7 +2,6 @@
 {
     public interface IValueProvider<T, TParam>
     {
-        
         T Provide(TParam param);
     }
 }

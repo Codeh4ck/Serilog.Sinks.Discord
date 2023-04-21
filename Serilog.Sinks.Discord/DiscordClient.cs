@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Discord;
@@ -8,68 +7,48 @@ using Discord.Webhook;
 using Serilog.Events;
 using Serilog.Sinks.Discord.Models;
 using Serilog.Sinks.Discord.Providers;
-using CommunityToolkit.HighPerformance.Buffers;
 
-namespace Serilog.Sinks.Discord.DiscordClient
+namespace Serilog.Sinks.Discord
 {
-    public class DiscordClient
+    public class DiscordClient : IDisposable
     {
-        private readonly WebhookConfiguration _webhookConfiguration;
+        private readonly SinkConfiguration _sinkConfiguration;
         private readonly DiscordWebhookClient _discordWebhookClient;
+        private readonly IValueProvider<Embed, LogEvent> _discordMessageProvider;
 
-        private readonly IValueProvider<LogSeverity, LogEventLevel> _logSeverityProvider;
-        private readonly IValueProvider<Color, LogEventLevel> _logColorProvider;
+        internal DiscordClient(SinkConfiguration sinkConfiguration,
+            IValueProvider<Embed, LogEvent> discordMessageProvider,
+            IValueProvider<LogSeverity, LogEventLevel> logSeverityProvider)
+        {
+            _sinkConfiguration = sinkConfiguration ?? throw new ArgumentNullException(nameof(sinkConfiguration));
+            _discordMessageProvider = discordMessageProvider ?? throw new ArgumentNullException(nameof(discordMessageProvider));
 
-        private EmbedBuilder _embedBuilder;
+            if (logSeverityProvider == null) throw new ArgumentNullException(nameof(logSeverityProvider));
+            
+            _discordWebhookClient = new DiscordWebhookClient(sinkConfiguration.WebhookUrl, new DiscordRestConfig()
+            {
+                LogLevel = logSeverityProvider.Provide(sinkConfiguration.LogLevel),
+            });
+        }
+
+        public void PostWebhook(LogEvent logEvent)
+        {
+            Embed embed = _discordMessageProvider.Provide(logEvent);
+            _discordWebhookClient.SendMessageAsync(
+                embeds: new List<Embed>() { embed }, 
+                allowedMentions: AllowedMentions.All, 
+                text: logEvent.Level == LogEventLevel.Fatal && _sinkConfiguration.MentionEveryoneOnFatalLevel ? "@everyone" : null).Wait();
+        }
         
-        public DiscordClient(WebhookConfiguration webhookConfiguration, IValueProvider<LogSeverity, LogEventLevel> logSeverityProvider, IValueProvider<Color, LogEventLevel> logColorProvider)
+        public async Task PostWebhookAsync(LogEvent logEvent)
         {
-            _webhookConfiguration = webhookConfiguration ?? throw new ArgumentNullException(nameof(webhookConfiguration));
-            _logSeverityProvider = logSeverityProvider ?? throw new ArgumentNullException(nameof(logSeverityProvider));
-            _logColorProvider = logColorProvider ?? throw new ArgumentNullException(nameof(logColorProvider));
-
-            _discordWebhookClient = new DiscordWebhookClient(webhookConfiguration.WebhookUrl, new DiscordRestConfig()
-            {
-                LogLevel = _logSeverityProvider.Provide(webhookConfiguration.LogLevel),
-                UseSystemClock = true,
-            });
-            
-            SetupEmbedBuilder();
+            Embed embed = _discordMessageProvider.Provide(logEvent);
+            await _discordWebhookClient.SendMessageAsync(
+                embeds: new List<Embed>() { embed },
+                allowedMentions: AllowedMentions.None, 
+                text: logEvent.Level == LogEventLevel.Fatal && _sinkConfiguration.MentionEveryoneOnFatalLevel ? "@everyone" : null);
         }
 
-        public async Task<bool> PostWebhook(LogEvent logEvent)
-        {
-            ulong messageId = await _discordWebhookClient.SendMessageAsync(embeds: new List<Embed>() { BuildEmbed(logEvent) });
-            return messageId != default;
-        }
-
-        private void SetupEmbedBuilder()
-        {
-            _embedBuilder = new EmbedBuilder();
-            
-            _embedBuilder.WithAuthor((authorBuilder) =>
-            {
-                authorBuilder.WithName(string.IsNullOrEmpty(_webhookConfiguration.WebhookAuthorUsername)
-                    ? Assembly.GetExecutingAssembly().GetName().Name
-                    : _webhookConfiguration.WebhookAuthorUsername);
-
-                if (!string.IsNullOrEmpty(_webhookConfiguration.WebhookAuthorIconUrl))
-                    authorBuilder.WithIconUrl(_webhookConfiguration.WebhookAuthorIconUrl);
-            });
-        }
-
-        private Embed BuildEmbed(LogEvent logEvent)
-        {
-            _embedBuilder.Color = _logColorProvider.Provide(logEvent.Level);
-            _embedBuilder.Description = logEvent.RenderMessage();
-            _embedBuilder.Title = StringPool.Shared.GetOrAdd($"[{logEvent.Level:F}] - New log received");
-                
-            _embedBuilder.WithFooter((footerBuilder) =>
-            {
-                footerBuilder.WithText(logEvent.Timestamp.ToString(_webhookConfiguration.TimestampFormat));
-            });
-            
-            return _embedBuilder.Build();
-        }
+        public void Dispose() => _discordWebhookClient?.Dispose();
     }
 }

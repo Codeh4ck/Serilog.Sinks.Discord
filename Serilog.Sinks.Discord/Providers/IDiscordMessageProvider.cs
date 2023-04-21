@@ -1,6 +1,7 @@
-﻿namespace Serilog.Sinks.Discord.Providers;
+﻿using Discord;
+using Serilog.Events;
 
-public class IDiscordMessageProvider
+namespace Serilog.Sinks.Discord.Providers
 {
-    
+    public interface IDiscordMessageProvider : IValueProvider<Embed, LogEvent> { }
 }
