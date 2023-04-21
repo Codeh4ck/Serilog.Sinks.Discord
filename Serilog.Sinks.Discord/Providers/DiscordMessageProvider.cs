@@ -12,6 +12,9 @@ using Serilog.Sinks.Discord.Models;
 namespace Serilog.Sinks.Discord.Providers
 
 {
+    /// <summary>
+    /// The default Discord message provider that transforms a <see cref="LogEvent"/> to an <see cref="Embed"/>.
+    /// </summary>
     public class DiscordMessageProvider : IDiscordMessageProvider
     {
         private readonly SinkConfiguration _sinkConfiguration;
