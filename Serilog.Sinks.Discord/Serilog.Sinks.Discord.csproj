@@ -14,11 +14,20 @@
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <AssemblyVersion>1.0.0</AssemblyVersion>
         <FileVersion>1.0.0</FileVersion>
+        <PackageIcon>NuGet-Avatar.png</PackageIcon>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Discord.Net" Version="3.10.0" />
       <PackageReference Include="Serilog" Version="3.0.0-dev-01958" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\NuGet-Avatar.png">
+        <Pack>True</Pack>
+        <Link>NuGet-Avatar.png</Link>
+      </None>
     </ItemGroup>
 
 </Project>
