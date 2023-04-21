@@ -16,6 +16,7 @@
         <FileVersion>1.0.0</FileVersion>
         <PackageIcon>NuGet-Avatar.png</PackageIcon>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageId>Codelux.Serilog.Sinks.Discord</PackageId>
     </PropertyGroup>
 
     <ItemGroup>

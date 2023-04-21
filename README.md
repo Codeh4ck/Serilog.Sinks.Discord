@@ -11,7 +11,7 @@ Serilog.Sinks.Discord is a [Serilog](https://github.com/serilog/serilog) sink th
 ### Installation
 
 ```
-PM > Install-Package Serilog.Sinks.Discord
+PM > Install-Package Codelux.Serilog.Sinks.Discord
 ```
 
 # Usage
