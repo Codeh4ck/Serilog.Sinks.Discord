@@ -7,12 +7,15 @@ using Serilog.Sinks.Discord.Models;
 
 namespace Serilog.Sinks.Discord
 {
+    /// <summary>
+    /// A Serilog sink that writes events to a Discord channel through webhooks.
+    /// </summary>
     public class DiscordSink : ILogEventSink
     {
-        private readonly DiscordClient _discordClient;
+        private readonly IDiscordClient _discordClient;
         private readonly SinkConfiguration _sinkConfiguration;
 
-        public DiscordSink(DiscordClient discordClient, SinkConfiguration sinkConfiguration)
+        public DiscordSink(IDiscordClient discordClient, SinkConfiguration sinkConfiguration)
         {
             _discordClient = discordClient ?? throw new ArgumentNullException(nameof(discordClient));
             _sinkConfiguration = sinkConfiguration ?? throw new ArgumentNullException(nameof(sinkConfiguration));
@@ -21,7 +24,7 @@ namespace Serilog.Sinks.Discord
         public void Emit(LogEvent logEvent)
         {
             if (logEvent.Level < _sinkConfiguration.LogLevel) return;
-            _discordClient.PostWebhook(logEvent);
+            _discordClient.ProcessLogEvent(logEvent);
         }
     }
 }
