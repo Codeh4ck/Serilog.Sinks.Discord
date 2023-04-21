@@ -29,10 +29,10 @@ namespace Serilog.Sinks.Discord
             IDiscordClient discordClient = null,
             IValueProvider<Embed, LogEvent> discordMessageProvider = null)
         {
-            configurator(SinkConfiguration);
-
             SinkConfiguration.OutputTemplate = outputTemplate;
             SinkConfiguration.LogLevel = minimumLogLevel;
+
+            configurator(SinkConfiguration);
 
             ValidateConfiguration();
 

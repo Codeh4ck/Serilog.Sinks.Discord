@@ -59,3 +59,39 @@ config.UseDifferentColorsOnLogLevel = true;
 ```
 
 This is set to `true` by default. If you wish to use the same colors on all levels, set it to `false`.
+
+---
+
+* Use custom message template
+
+You can override the default message template in two ways. One way is when configuring the Discord sink, using the `outputTemplate` parameter or by overriding the configuration in the configurator itself:
+
+```csharp
+config.OutputTemplate = "<your custom template>";
+```
+
+The default output template is set to `{Message:lj}{NewLine}{NewLine}{Exception}`. Keep in mind that Exceptions are also printed inside the Embed in a separate section.
+
+---
+
+* Use custom time format
+
+You can override the timestamp format of the event, which is displayed in the Embed footer as follows:
+
+```csharp
+config.TimestampFormat = "d";
+```
+
+The default value is set to `F` which stands for full date long format. You can override it to any applicable to .NET timestamp format flags.
+
+---
+
+* Use an avatar for the Embed
+
+If you'd like to style your Embed further, you can optionally add an avatar. Do so as follows:
+
+```csharp
+config.WebhookAuthorIconUrl = "<your avatar url>";
+```
+
+The default icon is set to `string.Empty` which renders no avatar.
