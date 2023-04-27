@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using Discord;
 using Serilog.Events;
 using Serilog.Formatting;
@@ -27,9 +28,9 @@ namespace Serilog.Sinks.Discord.Providers
         {
             _sinkConfiguration = sinkConfiguration ?? throw new ArgumentNullException(nameof(sinkConfiguration));
             _logColorValueProvider = logColorValueProvider ?? throw new ArgumentNullException(nameof(logColorValueProvider));
-            
+
             _textFormatter = new MessageTemplateTextFormatter(sinkConfiguration.OutputTemplate);
-            
+
             SetupEmbedBuilder();
         }
 
@@ -37,7 +38,7 @@ namespace Serilog.Sinks.Discord.Providers
         {
             if (_sinkConfiguration.UseDifferentColorsOnLogLevel)
                 _embedBuilder.WithColor(_logColorValueProvider.Provide(logEvent.Level));
-            
+
             _embedBuilder.WithTitle($"[{logEvent.Level:F}]");
 
             string message;
@@ -47,7 +48,7 @@ namespace Serilog.Sinks.Discord.Providers
                 _textFormatter.Format(logEvent, writer);
                 message = writer.ToString();
             }
-            
+
             StringBuilder descriptionBuilder = new StringBuilder();
 
             descriptionBuilder.AppendLine("\n");
@@ -70,7 +71,15 @@ namespace Serilog.Sinks.Discord.Providers
             }
 
             if (logEvent.Properties.Count > 0)
+            {
                 descriptionBuilder.AppendLine("\n**Parameters:**");
+
+                //if (CanBuildFields(logEvent))
+                //    _embedBuilder.WithFields(ParseLogProperties(logEvent));
+                //else
+
+                ParseLogPropertiesAsString(logEvent, descriptionBuilder);
+            }
 
             _embedBuilder.WithDescription(descriptionBuilder.ToString());
             _embedBuilder.WithFooter((footerBuilder) =>
@@ -78,9 +87,6 @@ namespace Serilog.Sinks.Discord.Providers
                 footerBuilder.WithText(logEvent.Timestamp.ToString(_sinkConfiguration.TimestampFormat));
             });
 
-            if (logEvent.Properties.Count > 0)
-                _embedBuilder.WithFields(ParseLogProperties(logEvent));
-            
             return _embedBuilder.Build();
         }
 
@@ -93,33 +99,59 @@ namespace Serilog.Sinks.Discord.Providers
                 authorBuilder.WithName(string.IsNullOrEmpty(_sinkConfiguration.ServiceName)
                     ? Assembly.GetEntryAssembly()?.GetName().Name ?? "Serilog"
                     : _sinkConfiguration.ServiceName);
-                
+
                 if (!string.IsNullOrEmpty(_sinkConfiguration.WebhookAuthorIconUrl))
                     authorBuilder.WithIconUrl(_sinkConfiguration.WebhookAuthorIconUrl);
             });
         }
 
-        private List<EmbedFieldBuilder> ParseLogProperties(LogEvent logEvent)
+        //private List<EmbedFieldBuilder> ParseLogProperties(LogEvent logEvent)
+        //{
+        //    var fields = logEvent.Properties;
+
+        //    List<EmbedFieldBuilder> fieldBuilders = new List<EmbedFieldBuilder>(logEvent.Properties.Count);
+
+        //    foreach (var field in fields)
+        //    {
+        //        EmbedFieldBuilder builder = new EmbedFieldBuilder();
+        //        builder.WithName(field.Key);
+
+        //        using (StringWriter writer = new StringWriter())
+        //        {
+        //            field.Value.Render(writer);
+        //            builder.WithValue(writer.ToString());
+        //        }
+
+        //        fieldBuilders.Add(builder);
+        //    }
+
+        //    return fieldBuilders;
+        //}
+
+        private void ParseLogPropertiesAsString(LogEvent logEvent, StringBuilder builder)
         {
             var fields = logEvent.Properties;
 
-            List<EmbedFieldBuilder> fieldBuilders = new List<EmbedFieldBuilder>(logEvent.Properties.Count);
+            builder.AppendLine("```");
 
             foreach (var field in fields)
             {
-                EmbedFieldBuilder builder = new EmbedFieldBuilder();
-                builder.WithName(field.Key);
+                using StringWriter writer = new StringWriter();
 
-                using (StringWriter writer = new StringWriter())
-                {
-                    field.Value.Render(writer);
-                    builder.WithValue(writer.ToString());
-                }
-
-                fieldBuilders.Add(builder);
+                field.Value.Render(writer);
+                builder.AppendLine($"[{field.Key}]: {writer.ToString()}");
+                builder.AppendLine();
             }
 
-            return fieldBuilders;
+            builder.AppendLine("```");
+        }
+
+        private bool CanBuildFields(LogEvent logEvent)
+        {
+            var fields = logEvent.Properties;
+            if (fields.Count > 25) return false;
+
+            return !fields.Any(x => x.Key.Length > 256);
         }
     }
 }
